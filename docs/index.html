@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Local OSINT Research Suite als statische Website: lokale Projekte, Wikipedia-Suche, transparente Scores, Review und Report-Export – ohne Server.">
+<link rel="icon" href="data:,">
+<title>Local OSINT Research Suite — Web</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div>
+    <h1>Local OSINT Research Suite</h1>
+    <span class="sub">Web-Version · statisch über GitHub Pages · Daten bleiben im Browser dieses Geräts</span>
+  </div>
+  <a class="gh" href="https://github.com/Wne1144/Osint-tool" target="_blank" rel="noopener noreferrer">GitHub-Repo ↗</a>
+</header>
+
+<main class="wrap">
+  <div class="notice"><b>Wichtiger Hinweis:</b> MVP für zulässige, verhältnismäßige Recherche. Bei einer Suche werden die ausgewählten Begriffe direkt aus deinem Browser an die öffentliche Wikipedia-Such-API übermittelt. Treffer sind Hinweise, <b>keine Identitätsbestätigung</b>. Keine Gesichtssuche, kein Scraping, keine geleakten Datenbanken. Der Score ist keine Identitätswahrscheinlichkeit.</div>
+
+  <div class="grid">
+    <aside>
+      <section class="card">
+        <h2>Neues Rechercheprojekt</h2>
+        <label for="pname">Projektname</label>
+        <input id="pname" placeholder="z. B. Quellenprüfung" autocomplete="off">
+        <label for="purpose">Zulässiger Zweck</label>
+        <textarea id="purpose" placeholder="Konkreter, notwendiger Zweck"></textarea>
+
+        <label for="name">Vor- und Nachname</label>
+        <input id="name" placeholder="Name (optional)" autocomplete="off">
+        <label class="check"><input type="checkbox" id="use-name" checked><span>Name als Suchbegriff verwenden</span></label>
+
+        <label for="email">E-Mail-Adresse</label>
+        <input id="email" placeholder="name@example.org" autocomplete="off">
+        <label class="check"><input type="checkbox" id="use-email" checked><span>E-Mail als Suchbegriff verwenden</span></label>
+
+        <label for="username">Benutzername / Handle</label>
+        <input id="username" placeholder="@handle" autocomplete="off">
+        <label class="check"><input type="checkbox" id="use-username" checked><span>Handle als Suchbegriff verwenden</span></label>
+
+        <label for="profile">Öffentliche Profil-URL (nur dokumentiert, keine Abrufprüfung)</label>
+        <input id="profile" placeholder="https://…" autocomplete="off">
+        <label for="notes">Zusätzliche Hinweise (lokal, nicht an Suchdienst gesendet)</label>
+        <textarea id="notes"></textarea>
+
+        <label class="check"><input type="checkbox" id="consent"><span>Ich bestätige einen zulässigen Zweck und erforderliche Berechtigungen. Mir ist bewusst, dass dies keine rechtliche Prüfung ersetzt.</span></label>
+        <label class="check"><input type="checkbox" id="external"><span>Ich willige ein, ausgewählte Namen, E-Mail oder Handles an Wikipedia für die öffentliche Suche zu übermitteln.</span></label>
+
+        <div class="row mt">
+          <button id="createBtn" type="button">Projekt anlegen</button>
+          <button class="secondary" id="exampleBtn" type="button" title="Fiktives Beispiel aus examples/synthetic-project.json laden">Beispiel laden</button>
+        </div>
+        <div class="small" id="createMsg" role="status"></div>
+      </section>
+
+      <section class="card">
+        <h2>Projekte</h2>
+        <div id="projects"><div class="small">Noch keine Projekte.</div></div>
+        <div class="row mt">
+          <button class="secondary" id="backupBtn" type="button">Backup herunterladen</button>
+          <button class="secondary" id="restoreBtn" type="button">Backup wiederherstellen</button>
+          <input id="restoreFile" type="file" accept="application/json,.json" hidden>
+          <button class="danger" id="eraseBtn" type="button">Alle Daten löschen</button>
+        </div>
+        <p class="small">Backups enthalten personenbezogene Projektdaten — geschützt aufbewahren. Wiederherstellen ersetzt alle derzeitigen Projektdaten.</p>
+      </section>
+
+      <section class="card">
+        <h2>Quellen &amp; Grenzen</h2>
+        <div class="small">
+          <p><b>Wikipedia MediaWiki API</b> — kostenlos, ohne Schlüssel, automatisiert; öffentliche Enzyklopädie-Suche, begrenzte Aussagekraft, Anbieterbedingungen beachten. API-Abfrage nur nach Nutzeraktion. Kein Anspruch auf Vollständigkeit.</p>
+          <p><b>Manuelle Suche</b> — wird als Google-Suchlink angeboten; du verlässt dann diese Seite und Google erhält die Anfrage.</p>
+          <p><b>PimEyes / Gesichtssuche</b> — nicht integriert; kein Upload, keine Biometrie.</p>
+          <p>Keine externe KI, keine Scraping-Umgehung, keine geleakten Datenbanken.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>So funktioniert der Score</h2>
+        <div class="small">
+          <p>Heuristik 0–100, exakt wie in der Python-Version: Token-Überlappung (max. 45) + exakte Phrase (20) + fester Quellenbeitrag Wikipedia (15) + Spezifität (max. 10) + unabhängige Belege (derzeit 0) − Unsicherheitspauschale (10).</p>
+          <p><b>Kein</b> Wahrscheinlichkeitswert: Auch 80+ bestätigt keine Identität. Die Faktoren jedes Treffers werden offen angezeigt.</p>
+        </div>
+      </section>
+    </aside>
+
+    <div>
+      <section class="card">
+        <div class="row between">
+          <h2 id="currentTitle">Wähle ein Projekt</h2>
+          <span class="badge" id="pstatus"></span>
+        </div>
+        <div id="projectActions" class="hidden">
+          <div id="runSummary" class="small"></div>
+          <div class="row mtb">
+            <button id="runBtn" type="button">Recherche starten</button>
+            <button class="secondary" id="reportJsonBtn" type="button">JSON-Bericht</button>
+            <button class="secondary" id="reportHtmlBtn" type="button">HTML-Bericht</button>
+            <button class="danger" id="deleteProjectBtn" type="button">Projekt löschen</button>
+          </div>
+          <div id="runStatus" class="status" role="status"></div>
+        </div>
+        <p class="small" id="noProjectHint">Lege links ein Projekt an oder wähle ein vorhandenes aus. Ohne ausgewählte Suchbegriffe (Name/E-Mail/Handle) kann keine Recherche laufen — das wird als Fehler protokolliert, nicht als „keine Informationen vorhanden“.</p>
+      </section>
+
+      <section class="card">
+        <h2>Treffer &amp; menschliche Prüfung</h2>
+        <div class="row">
+          <select id="filter" aria-label="Filter">
+            <option value="all">Alle Treffer</option>
+            <option value="pending">Prüfung ausstehend</option>
+            <option value="matched">Als passend markiert</option>
+            <option value="low">Score unter 40</option>
+          </select>
+          <select id="sort" aria-label="Sortierung">
+            <option value="score">Score absteigend</option>
+            <option value="new">Neueste</option>
+          </select>
+        </div>
+        <div id="hits" class="small mt">Noch keine Treffer.</div>
+      </section>
+
+      <section class="card">
+        <h2>Abfragen &amp; Läufe</h2>
+        <div id="queries" class="small">Noch keine Recherche ausgeführt. Jede Wikipedia-Abfrage (Iteration, Herkunft, Status) wird hier protokolliert — auch technische Fehler.</div>
+      </section>
+
+      <section class="card">
+        <h2>Lokaler Datenschutz</h2>
+        <div class="small">
+          <p>Speicherort dieser Web-Version: <code>localStorage</code> deines Browsers (Schlüssel <code>localosint.web.v1</code>) — kein Server, kein Tracking, keine Cookies. Der ursprüngliche SQLite-/Loopback-Schutz der Python-Version (Token, Host-/Origin-Check) entfällt, weil es keinen lokalen Server mehr gibt; dafür verlässt außer den Wikipedia-Suchbegriffen (nur nach deiner Bestätigung und Klick) nichts das Gerät.</p>
+          <p>Projektlöschung und vollständige Löschung sind verfügbar. Für hochsensible Löschung zusätzlich die Browser-Website-Daten löschen.</p>
+          <p><b>Desktop-/Offline-Variante:</b> Die originale Python-Version liegt im Repo unter <code>LocalOSINT/</code> (<code>python3 app.py</code>, nur Standardbibliothek, bindet nur an 127.0.0.1).</p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <p class="footer">Local OSINT Research Suite · Web-MVP 0.1 (Port der Python-Version) · Keine Rechtsberatung · Relevanzscore ist keine Identitätswahrscheinlichkeit · MIT-Lizenz</p>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

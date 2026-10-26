@@ -1,0 +1,3 @@
+Windows x64 source starter — requires installed Python 3.10+; no bundled runtime or executable; not target-tested.
+
+Source archive only. It does not meet the requested self-contained portable release requirement. See README.md and BUILD_STATUS.md.
