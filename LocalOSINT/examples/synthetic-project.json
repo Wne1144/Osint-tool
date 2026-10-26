@@ -1,0 +1,14 @@
+{
+  "example_only": true,
+  "warning": "Fictional synthetic data. This file is documentation only and is not auto-imported.",
+  "project": {
+    "name": "Example public-source verification",
+    "purpose": "Demonstrate the local project fields using an invented identity; do not search for a real person without appropriate purpose and authority.",
+    "inputs": [
+      {"kind": "name", "value": "Mira Exampleperson", "selected": true},
+      {"kind": "username", "value": "mira-example-demo", "selected": true},
+      {"kind": "email", "value": "mira.exampleperson@example.invalid", "selected": false},
+      {"kind": "notes", "value": "Entirely fictional sample record.", "selected": false}
+    ]
+  }
+}

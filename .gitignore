@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+localosint.sqlite3*
+app.log
